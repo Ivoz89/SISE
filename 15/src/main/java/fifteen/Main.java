@@ -1,5 +1,6 @@
 package fifteen;
 
+import java.io.SyncFailedException;
 import java.util.*;
 
 /**
@@ -81,9 +82,7 @@ public class Main {
             dirOrder = computeDirections("GDLP");
         }
         Scanner scanner = new Scanner(System.in);
-        System.out.println("PODAJ ILOSC RZEDÓW:");
         rowCount = scanner.nextInt();
-        System.out.println("PODAJ ILOSC KOLUMN:");
         columnCount = scanner.nextInt();
         ArrayList<ArrayList<Integer>> startingBoard = new ArrayList<>();
         for (int i = 0; i < rowCount; i++) {
@@ -131,9 +130,13 @@ public class Main {
             }
         }
         System.out.println(removedState.getDistance());
+        Stack<String> solution = new Stack<>();
         while (removedState.getParent() != null) {
-            System.out.printf(removedState.getSource().name());
+            solution.add(removedState.getSource().name());
             removedState = removedState.getParent();
+        }
+        while(!solution.empty()) {
+            System.out.printf(solution.pop());
         }
         System.out.println();
     }
