@@ -118,7 +118,7 @@ public class Solver {
             finalState = finalState.getParent();
         }
         ListIterator<State> it = solution.listIterator(solution.size()-1);
-        while (true) {
+        while (it.hasPrevious()) {
             it.previous().display();
             if(!it.hasPrevious()) {
                 break;
@@ -133,14 +133,15 @@ public class Solver {
      */
     public void displaySolution(State finalState) {
         ArrayList<String> solution = new ArrayList<>();
-        while (finalState.getParent() != null) {
+        while (finalState.getSource() != null) {
             solution.add(finalState.getSource().name());
             finalState = finalState.getParent();
         }
-        ListIterator<String> it = solution.listIterator(solution.size()-1);
+        ListIterator<String> it = solution.listIterator(solution.size());
         while (it.hasPrevious()) {
             System.out.printf(it.previous());
         }
+        System.out.println();
     }
 
     /**
