@@ -1,6 +1,5 @@
 package fifteen;
 
-import java.io.SyncFailedException;
 import java.util.*;
 
 /**
@@ -8,6 +7,7 @@ import java.util.*;
  */
 public class Main {
 
+    //TODO losowanie kolejności
     public static ArrayList<State.Direction> computeDirections(String arg) {
         ArrayList<State.Direction> argList = new ArrayList<>();
         for (char ch : arg.toCharArray()) {
@@ -28,12 +28,18 @@ public class Main {
                 case 'p':
                     argList.add(State.Direction.P);
                     break;
+                default:
+                    break;
             }
+        }
+        if(arg.startsWith("R") || arg.startsWith("r")) {
+            Collections.shuffle(argList);
         }
         return argList;
     }
 
     public static void main(String[] args) {
+        Solver.Algorithm algorithm = null;
         int zeroStartRow = 0;
         int zeroStartColumn = 0;
         int rowCount;
@@ -44,41 +50,14 @@ public class Main {
         ArrayList<State.Direction> dirOrder = null;
         Comparator<State> comp = null;
         if (args[0].equals("-b") || args[0].equals("--bfs")) {
-            comp = new Comparator<State>() {
-                @Override
-                public int compare(State o1, State o2) {
-                    if (o1.getDistance() != o2.getDistance()) {
-                        return o1.getDistance() - o2.getDistance();
-                    } else {
-                        return (int) (o1.getTimestamp() - o2.getTimestamp());
-                    }
-                }
-            };
+            algorithm = Solver.Algorithm.BFS;
             dirOrder = computeDirections(args[1]);
         } else if (args[0].equals("-d") || args[0].equals("--dfs") || args[0].equals("-i") || args[0].equals("--idfs")) {
             idfs = args[0].equals("-i") || args[0].equals("--idfs");
-            comp = new Comparator<State>() {
-                @Override
-                public int compare(State o1, State o2) {
-                    if (o1.getDistance() != o2.getDistance()) {
-                        return o2.getDistance() - o1.getDistance();
-                    } else {
-                        return (int) (o1.getTimestamp() - o2.getTimestamp());
-                    }
-                }
-            };
+            algorithm = idfs ? Solver.Algorithm.IDFS : Solver.Algorithm.DFS;
             dirOrder = computeDirections(args[1]);
         } else if (args[0].equals("-a") || args[0].equals("--a")) {
-            comp = new Comparator<State>() {
-                @Override
-                public int compare(State o1, State o2) {
-                    if (o1.getDistance() != o2.getDistance()) {
-                        return o1.getManValue() - o2.getManValue();
-                    } else {
-                        return (int) (o1.getTimestamp() - o2.getTimestamp());
-                    }
-                }
-            };
+            algorithm = Solver.Algorithm.MANHATTAN;
             dirOrder = computeDirections("GDLP");
         }
         Scanner scanner = new Scanner(System.in);
@@ -98,45 +77,14 @@ public class Main {
             startingBoard.add(row);
         }
         initialState = new State(startingBoard, zeroStartRow, zeroStartColumn, dirOrder);
-        State removedState = null;
-        if (idfs) {
-            int maxDepth = 0;
-            boolean solutionFound = false;
-            while (!solutionFound) {
-                State.visitedStates = new HashSet<>();
-                State.queue = new PriorityQueue<>(comp);
-                State.queue.add(initialState);
-                maxDepth++;
-                State.maxDepth = maxDepth;
-                while (!State.queue.isEmpty()) {
-                    removedState = State.queue.remove();
-                    if (removedState.isSolution()) {
-                        solutionFound=true;
-                        break;
-                    }
-                    removedState.visit();
-                }
-            }
-        } else {
-            State.visitedStates = new HashSet<>();
-            State.queue = new PriorityQueue<>(comp);
-            State.queue.add(initialState);
-            while (!State.queue.isEmpty()) {
-                removedState = State.queue.remove();
-                if (removedState.isSolution()) {
-                    break;
-                }
-                removedState.visit();
-            }
-        }
-        System.out.println(removedState.getDistance());
-        Stack<String> solution = new Stack<>();
-        while (removedState.getParent() != null) {
-            solution.add(removedState.getSource().name());
-            removedState = removedState.getParent();
-        }
-        while(!solution.empty()) {
-            System.out.printf(solution.pop());
+        Solver solver = new Solver(initialState, algorithm, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, false);
+        State finalState = solver.run();
+        solver.displaySolution(finalState);
+        solver.displaySolvingProcess(finalState);
+        System.out.println(finalState.getDistance());
+        while (finalState.getParent() != null) {
+            System.out.printf(finalState.getSource().name());
+            finalState = finalState.getParent();
         }
         System.out.println();
     }

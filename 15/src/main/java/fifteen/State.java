@@ -15,21 +15,22 @@ public class State {
     }
 
     public static int maxDepth;
-    public static Queue<State> queue;
-    public static HashSet<State> visitedStates = new HashSet<>(); //odwiedzone stany
     private State parent;
     private Direction source; //ruch wykonany aby znaleźć się w tym stanie
     private int zeroColumn; //pozycja zera
     private int zeroRow; //pozycja zera
     private int distance; //dystans od stanu początkowego
-    private long timestamp;
+    private long timestamp; //służy do określenia czasu dodania do kolejki (używany w przypadku równych priorytetów)
     final ArrayList<ArrayList<Integer>> board; // lewy górny róg planszy to (0,0)
-    final ArrayList<Direction> dirOrder;
+    final ArrayList<Direction> dirOrder; //kolejność odwiedzania sąsiadów
+
 
     /**
-     * Dla pierwszego stanu
      *
-     * @param board
+     * @param board układ pól
+     * @param zeroRow indeks rzędu pustego klocka
+     * @param zeroColumn indeks kolumny pustego klocka
+     * @param dirOrder kolejność odwiedzania sąsiadów
      */
     public State(ArrayList<ArrayList<Integer>> board, int zeroRow, int zeroColumn, ArrayList<Direction> dirOrder) {
         this.dirOrder = dirOrder;
@@ -52,8 +53,7 @@ public class State {
     }
 
     public void visit() {
-        visitedStates.add(this);
-        for (Direction dir : dirOrder) {
+        for (Direction dir : dirOrder) { //zachowanie kolejności odwiedzania sąsiadów
             switch (dir) {
                 case L:
                     if (zeroColumn != board.get(0).size() - 1) { //możliwy ruch w lewo
@@ -62,8 +62,9 @@ public class State {
                         newBoard.get(zeroRow).set(zeroColumn, newBoard.get(zeroRow).get(zeroColumn + 1));
                         newBoard.get(zeroRow).set(zeroColumn + 1, 0);
                         State neighbour = new State(newBoard, this, Direction.L, zeroRow, zeroColumn + 1, distance + 1, dirOrder);
-                        if (!visitedStates.contains(neighbour) && distance + 1 < maxDepth) {
-                            queue.add(neighbour);
+                        if (!Solver.addedStates.contains(neighbour) && distance + 1 <= maxDepth) {
+                            Solver.addVisitedState(neighbour);
+                            Solver.queue.add(neighbour);
                         }
                     }
                     break;
@@ -74,8 +75,9 @@ public class State {
                         newBoard.get(zeroRow).set(zeroColumn, newBoard.get(zeroRow).get(zeroColumn - 1));
                         newBoard.get(zeroRow).set(zeroColumn - 1, 0);
                         State neighbour = new State(newBoard, this, Direction.P, zeroRow, zeroColumn - 1, distance + 1, dirOrder);
-                        if (!visitedStates.contains(neighbour) && distance + 1 < maxDepth) {
-                            queue.add(neighbour);
+                        if (!Solver.addedStates.contains(neighbour) && distance + 1 <= maxDepth) {
+                            Solver.addVisitedState(neighbour);
+                            Solver.queue.add(neighbour);
                         }
                     }
                     break;
@@ -86,8 +88,9 @@ public class State {
                         newBoard.get(zeroRow).set(zeroColumn, newBoard.get(zeroRow + 1).get(zeroColumn));
                         newBoard.get(zeroRow + 1).set(zeroColumn, 0);
                         State neighbour = new State(newBoard, this, Direction.G, zeroRow + 1, zeroColumn, distance + 1, dirOrder);
-                        if (!visitedStates.contains(neighbour) && distance + 1 < maxDepth) {
-                            queue.add(neighbour);
+                        if (!Solver.addedStates.contains(neighbour) && distance + 1 <= maxDepth) {
+                            Solver.addVisitedState(neighbour);
+                            Solver.queue.add(neighbour);
                         }
                     }
                     break;
@@ -98,8 +101,9 @@ public class State {
                         newBoard.get(zeroRow).set(zeroColumn, newBoard.get(zeroRow - 1).get(zeroColumn));
                         newBoard.get(zeroRow - 1).set(zeroColumn, 0);
                         State neighbour = new State(newBoard, this, Direction.D, zeroRow - 1, zeroColumn, distance + 1, dirOrder);
-                        if (!visitedStates.contains(neighbour) && distance + 1 < maxDepth) {
-                            queue.add(neighbour);
+                        if (!Solver.addedStates.contains(neighbour) && distance + 1 <= maxDepth) {
+                            Solver.addVisitedState(neighbour);
+                            Solver.queue.add(neighbour);
                         }
                     }
                     break;
@@ -130,7 +134,7 @@ public class State {
                 if (board.get(i).get(j) != counter) {
                     int currentValue = board.get(i).get(j);
                     if (currentValue == 0) {
-                        sum = sum + Math.abs(board.size() - 1 - i) + Math.abs(board.get(0).size()-1 - j);
+                        sum = sum + Math.abs(board.size() - 1 - i) + Math.abs(board.get(0).size() - 1 - j);
                     } else {
                         int finalRow = currentValue / board.get(0).size();
                         int finalColumn = (currentValue - 1) % board.get(0).size();
@@ -171,10 +175,6 @@ public class State {
                 toHashCode();
     }
 
-    public static Queue<State> getQueue() {
-        return queue;
-    }
-
     public State getParent() {
         return parent;
     }
@@ -201,5 +201,41 @@ public class State {
 
     public long getTimestamp() {
         return timestamp;
+    }
+
+    public static int getMaxDepth() {
+        return maxDepth;
+    }
+
+    public static void setMaxDepth(int maxDepth) {
+        State.maxDepth = maxDepth;
+    }
+
+    public void setParent(State parent) {
+        this.parent = parent;
+    }
+
+    public void setSource(Direction source) {
+        this.source = source;
+    }
+
+    public void setZeroColumn(int zeroColumn) {
+        this.zeroColumn = zeroColumn;
+    }
+
+    public void setZeroRow(int zeroRow) {
+        this.zeroRow = zeroRow;
+    }
+
+    public void setDistance(int distance) {
+        this.distance = distance;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public ArrayList<Direction> getDirOrder() {
+        return dirOrder;
     }
 }
